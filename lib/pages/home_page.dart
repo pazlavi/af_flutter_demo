@@ -4,6 +4,7 @@ import 'package:af_flutter_demo/pages/laoding_page.dart';
 import 'package:af_flutter_demo/utils/json_format.dart';
 import 'package:af_flutter_demo/widgets/callback_text_view.dart';
 import 'package:af_flutter_demo/widgets/my_scaffold.dart';
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:appsflyer_sdk/appsflyer_sdk.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -21,17 +22,17 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    Map appsFlyerOptions = {
-      "afDevKey": "4ux8wjmC9qP6qc3UWZ5Ldh",
-      "afAppId": "1534996322",
-      "isDebug": true
-    };
-
-    _appsflyerSdk = AppsflyerSdk(appsFlyerOptions);
+    AppsFlyerOptions options = AppsFlyerOptions(
+        afDevKey: "4ux8wjmC9qP6qc3UWZ5Ldh",
+        appId: "1534996322",
+        showDebug: true,
+        timeToWaitForATTUserAuthorization: 60);
+    _appsflyerSdk = AppsflyerSdk(options);
 
     _registerOnDeepLink();
     _registerOnConversionData();
     _requestPermission();
+    _requestATTPermission();
   }
 
   @override
@@ -122,6 +123,19 @@ class _HomePageState extends State<HomePage> {
         provisional: false,
         sound: true,
       );
+    }
+  }
+
+  void _requestATTPermission() {
+    if (Platform.isIOS) {
+      AppTrackingTransparency.requestTrackingAuthorization()
+          .then((status) async {
+        print(status);
+        if (status == TrackingStatus.authorized) {
+          var idfa = await AppTrackingTransparency.getAdvertisingIdentifier();
+          print("IDFA is $idfa");
+        }
+      });
     }
   }
 }
